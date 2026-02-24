@@ -1,15 +1,14 @@
 {
-  "name": "typescript-library-template",
+  "name": "tool-sandbox-mcp",
   "version": "0.0.0",
-  "description": "Template for creating TypeScript libraries",
+  "description": "MCP server that provides sandboxed code execution with access to upstream MCP tools via loopback.",
   "license": "MIT",
   "author": "Adam Jones (domdomegg)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/domdomegg/typescript-library-template.git"
+    "url": "https://github.com/domdomegg/tool-sandbox-mcp.git"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "bin": "dist/index.js",
   "files": [
     "dist"
   ],
@@ -21,8 +20,14 @@
     "build": "tsc --project tsconfig.build.json",
     "prepublishOnly": "npm run clean && npm run build"
   },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "express": "^5.2.1",
+    "tool-sandbox": "^1.0.1"
+  },
   "devDependencies": {
     "@tsconfig/node-lts": "^22.0.2",
+    "@types/express": "^5.0.6",
     "eslint": "^9.32.0",
     "eslint-config-domdomegg": "^2.0.9",
     "tsconfig-domdomegg": "^1.0.0",
