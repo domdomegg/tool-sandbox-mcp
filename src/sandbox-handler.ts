@@ -1,13 +1,13 @@
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import {createSandbox, fromMcpClients} from 'tool-sandbox';
+import {createSandbox, fromMcpClients, type ExecuteResult} from 'tool-sandbox';
 import type {Config} from './types.js';
 
 export const executeSandbox = async (
 	code: string,
 	upstreamToken: string,
 	config: Config,
-): Promise<{success: boolean; result?: unknown; error?: string}> => {
+): Promise<ExecuteResult> => {
 	const selfPrefix = config.selfPrefix ?? 'tool-sandbox-mcp';
 	const upstreamUrl = new URL('/mcp', config.upstream);
 
@@ -32,7 +32,7 @@ export const executeSandbox = async (
 
 		const sandbox = await createSandbox({tools: filteredTools});
 		const result = await sandbox.execute.handler({code});
-		return result as {success: boolean; result?: unknown; error?: string};
+		return result;
 	} finally {
 		await client.close();
 	}

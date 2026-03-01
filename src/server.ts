@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-deprecated -- Using low-level Server to avoid JSON Schema → Zod conversion */
-import {Server} from '@modelcontextprotocol/sdk/server/index.js';
-import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
+import {McpServer} from '@modelcontextprotocol/sdk/server/mcp.js';
 import {StreamableHTTPServerTransport} from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import {
-	ListToolsRequestSchema,
-	CallToolRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import type {Transport} from '@modelcontextprotocol/sdk/shared/transport.js';
+import {z} from 'zod';
 import express from 'express';
 import type {Config} from './types.js';
 import {executeSandbox} from './sandbox-handler.js';
@@ -52,70 +48,58 @@ export const createApp = (config: Config): express.Express => {
 	return app;
 };
 
-const createMcpServer = (upstreamToken: string, config: Config): Server => {
-	const server = new Server(
-		{name: 'tool-sandbox-mcp', version: '1.0.0'},
-		{capabilities: {tools: {}}},
-	);
+const createMcpServer = (upstreamToken: string, config: Config): McpServer => {
+	const server = new McpServer({name: 'tool-sandbox-mcp', version: '1.0.0'});
 
-	server.setRequestHandler(ListToolsRequestSchema, async () => ({
-		tools: [{
-			name: 'execute_code',
-			description: 'Execute JavaScript code in a sandboxed environment with access to all upstream MCP tools. '
-				+ 'Use `await tool(name, args)` to call tools, `await tool(\'list_tools\', {})` to list available tools, '
-				+ 'and `await tool(\'describe_tool\', {name})` to get tool details. '
-				+ 'Use `return value` to return a result. `console.log()` output is captured.',
-			inputSchema: {
-				type: 'object' as const,
-				properties: {
-					code: {type: 'string', description: 'JavaScript code to execute'},
-				},
-				required: ['code'],
-			},
-		}],
-	}));
+	server.registerTool(
+		'execute_code',
+		{
+			description: 'Run JavaScript in a sandboxed environment.\n'
+				+ '\n'
+				+ 'Available: tool(name, args), store (persistent), store._prev (last result), atob/btoa, and standard JS built-ins (JSON, Math, Date, Promise, etc.). No logs are captured — use return to pass data back.\n'
+				+ '\n'
+				+ 'Binary data (images, audio, PDFs) from tools is automatically extracted. Tool results containing these will have the data replaced with refs like {type: \'blob_ref\', id: \'blob_k7m2x9\', mimeType: \'image/png\'}. The actual content is returned separately. If you need the raw base64 data (e.g., to crop, resize, or pass to another tool), use tool(\'get_blob\', {id}) which returns {id, data, mimeType}. Note: blobs are only available within the same execution - save to store if needed later.\n'
+				+ '\n'
+				+ 'IMPORTANT: Call tool(\'describe_tool\', {name}) to get a tool\'s schema before using it. Do not guess schemas.\n'
+				+ '\n'
+				+ 'Use tool(\'list_tools\', {}) to discover available tools.\n'
+				+ '\n'
+				+ 'Style: Keep code short and simple. No comments or error handling needed. Return summaries rather than large objects.',
+			inputSchema: {code: z.string().describe('JavaScript code to execute')},
+		},
+		async ({code}) => {
+			try {
+				const {blobs, ...rest} = await executeSandbox(code, upstreamToken, config);
 
-	server.setRequestHandler(CallToolRequestSchema, async (request) => {
-		if (request.params.name !== 'execute_code') {
-			return {
-				content: [{type: 'text' as const, text: `Unknown tool: ${request.params.name}`}],
-				isError: true,
-			};
-		}
+				const maxBlobs = 5;
+				const content: ({type: 'text'; text: string} | {type: 'image'; data: string; mimeType: string} | {type: 'audio'; data: string; mimeType: string})[] = [
+					{type: 'text', text: JSON.stringify(rest)},
+				];
 
-		const code = getString(request.params.arguments?.code);
-		if (!code) {
-			return {
-				content: [{type: 'text' as const, text: 'Missing required parameter: code'}],
-				isError: true,
-			};
-		}
+				for (const blob of blobs.slice(0, maxBlobs)) {
+					if (blob.mimeType.startsWith('image/')) {
+						content.push({type: 'image', data: blob.data, mimeType: blob.mimeType});
+					} else if (blob.mimeType.startsWith('audio/')) {
+						content.push({type: 'audio', data: blob.data, mimeType: blob.mimeType});
+					} else {
+						content.push({type: 'text', text: `[Blob ${blob.id}: ${blob.mimeType}, ${blob.data.length} chars base64]`});
+					}
+				}
 
-		try {
-			const result = await executeSandbox(code, upstreamToken, config);
+				if (blobs.length > maxBlobs) {
+					content.push({type: 'text', text: `[${blobs.length - maxBlobs} more blobs not shown]`});
+				}
 
-			if (!result.success) {
+				return {content, isError: !rest.success};
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err);
 				return {
-					content: [{type: 'text' as const, text: `Execution error: ${result.error ?? 'Unknown error'}`}],
+					content: [{type: 'text' as const, text: `Error: ${message}`}],
 					isError: true,
 				};
 			}
-
-			const text = result.result !== undefined
-				? (typeof result.result === 'string' ? result.result : JSON.stringify(result.result, null, 2))
-				: '(no return value)';
-
-			return {
-				content: [{type: 'text' as const, text}],
-			};
-		} catch (err) {
-			const message = err instanceof Error ? err.message : String(err);
-			return {
-				content: [{type: 'text' as const, text: `Error: ${message}`}],
-				isError: true,
-			};
-		}
-	});
+		},
+	);
 
 	return server;
 };

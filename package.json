@@ -8,11 +8,14 @@
     "type": "git",
     "url": "https://github.com/domdomegg/tool-sandbox-mcp.git"
   },
-  "bin": "dist/index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": "dist/main.js",
   "files": [
     "dist"
   ],
   "scripts": {
+    "start": "npm run build && node ./dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest --watch",
     "lint": "eslint",
@@ -23,7 +26,8 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "express": "^5.2.1",
-    "tool-sandbox": "^1.0.1"
+    "tool-sandbox": "^2.0.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tsconfig/node-lts": "^22.0.2",
