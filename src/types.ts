@@ -7,6 +7,6 @@ export type Config = {
 	host?: string;
 	/** External URL of this server (e.g. "https://tool-sandbox.mcp.home.adamjones.me") */
 	issuerUrl?: string;
-	/** Prefix to filter out from upstream tools to prevent recursion. Defaults to "tool-sandbox-mcp". */
+	/** Prefix to filter out from upstream tools to prevent recursion. Defaults to "tool-sandbox". */
 	selfPrefix?: string;
 };

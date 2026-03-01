@@ -23,7 +23,7 @@ TOOL_SANDBOX_MCP_CONFIG='{"upstream": "https://mcp.example.com"}' npx -y tool-sa
 
 This starts an HTTP MCP server on localhost:3000. When a user connects, they authenticate with the upstream server (via proxied OAuth). The server exposes a single `execute_code` tool — the agent writes JavaScript that can call any tool on the upstream.
 
-In general you'll want to point this at some kind of gateway which aggregates MCP servers. You can use [mcp-gateway](https://github.com/domdomegg/mcp-gateway) for this if you don't already have a gateway. (The `selfPrefix` config argument can prevent recursive calls if you want).
+In general you'll want to point this at some kind of gateway which aggregates MCP servers. You can use [mcp-aggregator](https://github.com/domdomegg/mcp-aggregator) for this if you don't already have a gateway. (The `selfPrefix` config argument can prevent recursive calls if you want).
 
 <details>
 <summary>Other configuration methods</summary>
@@ -52,7 +52,7 @@ Only `upstream` is required. Everything else has sensible defaults.
 | `port` | No | Port to listen on. Defaults to `3000`. |
 | `host` | No | Host to bind to. Defaults to `"0.0.0.0"`. |
 | `issuerUrl` | No | Public URL of this server. Required when behind a reverse proxy. |
-| `selfPrefix` | No | Prefix to filter out from upstream tools to prevent recursion. Defaults to `"tool-sandbox-mcp"`. |
+| `selfPrefix` | No | Prefix to filter out from upstream tools to prevent recursion. Defaults to `"tool-sandbox"`. |
 
 A full example:
 

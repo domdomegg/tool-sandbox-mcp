@@ -11,7 +11,7 @@ const main = () => {
 	app.listen(port, host, () => {
 		console.log(`tool-sandbox-mcp listening on ${host}:${port}`);
 		console.log(`Upstream: ${config.upstream}`);
-		console.log(`Self-exclusion prefix: ${config.selfPrefix ?? 'tool-sandbox-mcp'}`);
+		console.log(`Self-exclusion prefix: ${config.selfPrefix ?? 'tool-sandbox'}`);
 	});
 };
 

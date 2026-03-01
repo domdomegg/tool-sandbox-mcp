@@ -8,7 +8,7 @@ export const executeSandbox = async (
 	upstreamToken: string,
 	config: Config,
 ): Promise<ExecuteResult> => {
-	const selfPrefix = config.selfPrefix ?? 'tool-sandbox-mcp';
+	const selfPrefix = config.selfPrefix ?? 'tool-sandbox';
 	const upstreamUrl = new URL('/mcp', config.upstream);
 
 	// Connect to upstream as MCP client, forwarding the user's token
