@@ -22,6 +22,7 @@ export const createApp = (config: Config): express.Express => {
 			authorization_servers: [config.upstream],
 		});
 	};
+
 	app.get('/.well-known/oauth-protected-resource', protectedResourceMetadata);
 	app.get('/.well-known/oauth-protected-resource/mcp', protectedResourceMetadata);
 
