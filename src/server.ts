@@ -15,12 +15,15 @@ export const createApp = (config: Config): express.Express => {
 
 	// OAuth protected resource metadata — points clients to the upstream's auth server.
 	// The client authenticates with the upstream directly; we just forward the token.
-	app.get('/.well-known/oauth-protected-resource', (_req, res) => {
+	// RFC 9728: serve at both the root and the path-aware URL
+	const protectedResourceMetadata = (_req: express.Request, res: express.Response) => {
 		res.json({
 			resource: `${baseUrl}/mcp`,
 			authorization_servers: [config.upstream],
 		});
-	});
+	};
+	app.get('/.well-known/oauth-protected-resource', protectedResourceMetadata);
+	app.get('/.well-known/oauth-protected-resource/mcp', protectedResourceMetadata);
 
 	// Protected MCP endpoint
 	app.all('/mcp', async (req, res) => {
