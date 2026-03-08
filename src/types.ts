@@ -9,4 +9,6 @@ export type Config = {
 	issuerUrl?: string;
 	/** Prefix to filter out from upstream tools to prevent recursion. Defaults to "tool-sandbox". */
 	selfPrefix?: string;
+	/** Enable persistent store across calls (requires single-node deployment). Defaults to false. */
+	store?: boolean;
 };

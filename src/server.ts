@@ -53,28 +53,47 @@ export const createApp = (config: Config): express.Express => {
 	return app;
 };
 
+const storeDescription = '\n'
+	+ 'Returns a store_id in the result. Pass it back in subsequent calls to resume the same store. Omit store_id to start fresh. Sessions expire after 5 minutes of inactivity.\n';
+
+const buildDescription = (storeEnabled: boolean): string => 'Run JavaScript in a sandboxed environment.\n'
+	+ `\n${
+		storeEnabled
+			? 'Available: tool(name, args), store (persistent across calls with same store_id), store._prev (last result), atob/btoa, and standard JS built-ins (JSON, Math, Date, Promise, etc.). No logs are captured — use return to pass data back.\n'
+			: 'Available: tool(name, args), store._prev (last result), atob/btoa, and standard JS built-ins (JSON, Math, Date, Promise, etc.). No logs are captured — use return to pass data back.\n'
+	}${storeEnabled ? storeDescription : ''
+	}\n`
+	+ 'Binary data (images, audio, PDFs) from tools is automatically extracted. Tool results containing these will have the data replaced with refs like {type: \'blob_ref\', id: \'blob_k7m2x9\', mimeType: \'image/png\'}. The actual content is returned separately. If you need the raw base64 data (e.g., to crop, resize, or pass to another tool), use tool(\'get_blob\', {id}) which returns {id, data, mimeType}. Note: blobs are only available within the same execution - save to store if needed later.\n'
+	+ '\n'
+	+ 'IMPORTANT: Call tool(\'describe_tool\', {name}) to get a tool\'s schema before using it. Do not guess schemas.\n'
+	+ '\n'
+	+ 'Use tool(\'list_tools\', {}) to discover available tools.\n'
+	+ '\n'
+	+ 'Style: Keep code short and simple. No comments or error handling needed. Return summaries rather than large objects.';
+
 const createMcpServer = (upstreamToken: string, config: Config): McpServer => {
 	const server = new McpServer({name: 'tool-sandbox-mcp', version: '1.0.0'});
+	const storeEnabled = config.store ?? false;
+
+	const inputSchema = storeEnabled
+		? {
+			code: z.string().describe('JavaScript code to execute'),
+			store_id: z.string().optional().describe('Session ID from a previous call to resume its store. Omit to start fresh.'),
+		}
+		: {
+			code: z.string().describe('JavaScript code to execute'),
+		};
 
 	server.registerTool(
 		'execute_code',
 		{
-			description: 'Run JavaScript in a sandboxed environment.\n'
-				+ '\n'
-				+ 'Available: tool(name, args), store (persistent), store._prev (last result), atob/btoa, and standard JS built-ins (JSON, Math, Date, Promise, etc.). No logs are captured — use return to pass data back.\n'
-				+ '\n'
-				+ 'Binary data (images, audio, PDFs) from tools is automatically extracted. Tool results containing these will have the data replaced with refs like {type: \'blob_ref\', id: \'blob_k7m2x9\', mimeType: \'image/png\'}. The actual content is returned separately. If you need the raw base64 data (e.g., to crop, resize, or pass to another tool), use tool(\'get_blob\', {id}) which returns {id, data, mimeType}. Note: blobs are only available within the same execution - save to store if needed later.\n'
-				+ '\n'
-				+ 'IMPORTANT: Call tool(\'describe_tool\', {name}) to get a tool\'s schema before using it. Do not guess schemas.\n'
-				+ '\n'
-				+ 'Use tool(\'list_tools\', {}) to discover available tools.\n'
-				+ '\n'
-				+ 'Style: Keep code short and simple. No comments or error handling needed. Return summaries rather than large objects.',
-			inputSchema: {code: z.string().describe('JavaScript code to execute')},
+			description: buildDescription(storeEnabled),
+			inputSchema,
 		},
-		async ({code}) => {
+		async (args: {code: string; store_id?: string}) => {
 			try {
-				const {blobs, ...rest} = await executeSandbox(code, upstreamToken, config);
+				const storeId = storeEnabled ? args.store_id : undefined;
+				const {blobs, ...rest} = await executeSandbox(args.code, upstreamToken, config, storeId);
 
 				const maxBlobs = 5;
 				const content: ({type: 'text'; text: string} | {type: 'image'; data: string; mimeType: string} | {type: 'audio'; data: string; mimeType: string})[] = [
