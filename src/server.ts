@@ -11,6 +11,7 @@ const getString = (value: unknown): string | undefined =>
 
 export const createApp = (config: Config): express.Express => {
 	const app = express();
+	app.use(express.json({limit: '20mb'}));
 	const baseUrl = config.issuerUrl ?? `http://localhost:${config.port ?? 3000}`;
 
 	// OAuth protected resource metadata — points clients to the upstream's auth server.
@@ -46,7 +47,7 @@ export const createApp = (config: Config): express.Express => {
 
 		const server = createMcpServer(upstreamToken, config);
 		await server.connect(transport as unknown as Transport);
-		await transport.handleRequest(req, res);
+		await transport.handleRequest(req, res, req.body);
 	});
 
 	return app;
