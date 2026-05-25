@@ -87,8 +87,15 @@ const createMcpServer = (upstreamToken: string, config: Config): McpServer => {
 	server.registerTool(
 		'execute_code',
 		{
+			title: 'Execute code',
 			description: buildDescription(storeEnabled),
 			inputSchema,
+			annotations: {
+				readOnlyHint: false,
+				destructiveHint: true,
+				idempotentHint: false,
+				openWorldHint: true,
+			},
 		},
 		async (args: {code: string; store_id?: string}) => {
 			try {
