@@ -1,6 +1,6 @@
 {
   "name": "tool-sandbox-mcp",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "MCP server that provides sandboxed code execution with access to upstream MCP tools via loopback.",
   "license": "MIT",
   "author": "Adam Jones (domdomegg)",
@@ -26,7 +26,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "express": "^5.2.1",
-    "tool-sandbox": "^2.0.0",
+    "tool-sandbox": "^2.2.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
