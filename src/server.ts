@@ -20,7 +20,7 @@ export const createApp = (config: Config): express.Express => {
 	const protectedResourceMetadata = (_req: express.Request, res: express.Response) => {
 		res.json({
 			resource: `${baseUrl}/mcp`,
-			authorization_servers: [config.upstream],
+			authorization_servers: [config.authorizationServer ?? config.upstream],
 		});
 	};
 
