@@ -7,7 +7,7 @@ const main = () => {
 	const app = createApp(config);
 
 	const port = config.port ?? 3000;
-	const host = config.host ?? '0.0.0.0';
+	const host = config.host ?? '::';
 	app.listen(port, host, () => {
 		console.log(`tool-sandbox-mcp listening on ${host}:${port}`);
 		console.log(`Upstream: ${config.upstream}`);

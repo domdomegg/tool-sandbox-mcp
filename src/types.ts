@@ -3,7 +3,7 @@ export type Config = {
 	upstream: string;
 	/** Port to listen on. Defaults to 3000. */
 	port?: number;
-	/** Host to bind to. Defaults to "0.0.0.0". */
+	/** Host to bind to. Defaults to "::" (all IPv4 and IPv6 interfaces). */
 	host?: string;
 	/** External URL of this server (e.g. "https://tool-sandbox.mcp.home.adamjones.me") */
 	issuerUrl?: string;
