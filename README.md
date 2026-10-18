@@ -50,7 +50,7 @@ Only `upstream` is required. Everything else has sensible defaults.
 |-------|----------|-------------|
 | `upstream` | Yes | URL of the upstream MCP server (e.g. `"https://mcp.example.com"`). |
 | `port` | No | Port to listen on. Defaults to `3000`. |
-| `host` | No | Host to bind to. Defaults to `"0.0.0.0"`. |
+| `host` | No | Host to bind to. Defaults to `"::"` (all IPv4 and IPv6 interfaces). |
 | `issuerUrl` | No | Public URL of this server. Required when behind a reverse proxy. |
 | `selfPrefix` | No | Prefix to filter out from upstream tools to prevent recursion. Defaults to `"tool-sandbox"`. |
 | `store` | No | Enable persistent store across calls via `store_id`. Requires single-node deployment. Defaults to `false`. |
